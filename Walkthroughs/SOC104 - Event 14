@@ -1,0 +1,34 @@
+- Create case/take ownership of the event w/ EventID 14
+
+
+
+- Playbook asks how the SIEM was notified of this event. 
+	Ans: Unexpected traffic (?)
+
+- Playbook instructs us to look at the logs and endpoint security.
+	-- Logs do not list any traffic on Sep 15 2020. 
+	-- Endpoint security --> JohnComputer
+		--- Look at the running processes. Notice the google updater is there, but also a suspiciously named 
+				process named "Purchase-Order_NO.231101.exe".
+		--- Expand this process and click the VirusTotal icon to the right of the MD5 hash.
+		--- 58/71 security vendors flagged this file as malicious [https://www.virustotal.com/gui/file/40618ab352c23e61bb192f2aedd9360fed2df2a25d42491d0ab56eda5c2db558]
+		--- We found malware! True positive. [screenshot: "agenttesla.png"]
+		--- By inputting the hash of the malware, we do not need to handle the malware itself at this point. 
+
+- Playbook asks if JohnComputer needs to be quarantined/cleaned: 
+	Ans: Yes. Do so. 
+
+- Playbook wants us to use malware analysis to find the C2
+	-- In endpoint security, we do not have the option of downloading the agenttesla malware using the filename "Purchase-Order_NO.231101.exe".
+	-- We do have access to the assumed malware that triggered the original alert; GoogleUpdate.bin.zip
+	-- Lets use a Remnux VM, which is a linux distro made for malware analysis. 
+	-- Other VMs can be used as well. Do not run on your host machine.
+
+- The following will be run on the VM:
+	-- Open a terminal and use the curl command to download the malware:
+		curl -o malware.zip https://files-ld.s3.us-east-2.amazonaws.com/GoogleUpdate.bin.zip
+	-- Unzip the archive using the password "infected", and view the contents:
+		unzip malware.zip
+	-- This yields the executable, GoogleUpdate.bin.
+	-- Open up the browser and login to https://app.any.run/. Because this VM will be handling malware, I do not recommened saving your login info into the browser.
+	-- Upload GoogleUpdate.bin
